@@ -1,4 +1,4 @@
-function updatezip ([string]$sourcepath, [string]$zip, [switch]$remove, [switch]$help) {# Update files in a ZIP archive, does not add any, optionally removes files.
+function updatezip ([string]$sourcepath, [string]$zip, [switch]$remove, [switch]$help) {# Update files in a ZIP archive, does not add any, but optionally removes files.
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -86,6 +86,8 @@ Write-Host -f white "Skipped files: " -n; Write-Host "$skipped"
 if ($remove) {Write-Host -f white "Removed files: " -n; Write-Host -f red "$removed"}}
 else {Write-Host -f Green "🚫 Nothing to update. All $skipped files matched their archived versions and no files were removed."}; ""}
 sal -name update -value updatezip
+
+Export-ModuleMember -Function updatezip
 
 <#
 ## UpdateZip
