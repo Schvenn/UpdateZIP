@@ -30,7 +30,7 @@ $chunk = $segment.Substring(0, $breakIndex + 1); $wrapped += $chunk; $remaining 
 if ($remaining.Length -gt 0 -or $line -eq "") {$wrapped += $remaining}}
 return ($wrapped -join "`n")}
 
-# Draw a horizontal line.
+# Display a horizontal line.
 function line ($colour, $length, [switch]$pre, [switch]$post, [switch]$double) {if (-not $length) {[int]$length = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
 if ($length) {if ($length -lt 60) {[int]$length = 60}
 if ($length -gt $Host.UI.RawUI.BufferSize.Width) {[int]$length = $Host.UI.RawUI.BufferSize.Width}}
@@ -39,20 +39,24 @@ $character = if ($double) {"="} else {"-"}
 Write-Host -f $colour ($character * $length)
 if ($post) {Write-Host ""}}
 
-# Inline help.
-if ($help) {function scripthelp ($section) {line yellow 100 -pre; $pattern = "(?ims)^## ($section.*?)(##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $lines = $match.Groups[1].Value.TrimEnd() -split "`r?`n", 2; Write-Host $lines[0] -f yellow; line yellow 100
-if ($lines.Count -gt 1) {wordwrap $lines[1] 100 | Out-String | Out-Host -Paging}; line yellow 100}
-
+function help {# Inline help.
+function scripthelp ($section) {# (Internal) Generate the help sections from the comments section of the script.
+line yellow 100 -pre; $pattern = "(?ims)^## ($section.*?)(##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $lines = $match.Groups[1].Value.TrimEnd() -split "`r?`n", 2; Write-Host $lines[0] -f yellow; line yellow 100
+if ($lines.Count -gt 1) {wordwrap $lines[1] 100 | Write-Host -f white | Out-Host -Paging}; line yellow 100}
 $scripthelp = Get-Content -Raw -Path $PSCommandPath; $sections = [regex]::Matches($scripthelp, "(?im)^## (.+?)(?=\r?\n)")
 if ($sections.Count -eq 1) {cls; Write-Host "$([System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath)) Help:" -f cyan; scripthelp $sections[0].Groups[1].Value; ""; return}
+
 $selection = $null
-do {cls; Write-Host "$([System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath)) Help Sections:`n" -f cyan; for ($i = 0; $i -lt $sections.Count; $i++) {"{0}: {1}" -f ($i + 1), $sections[$i].Groups[1].Value}
+do {cls; Write-Host "$(Get-ChildItem (Split-Path $PSCommandPath) | Where-Object { $_.FullName -ieq $PSCommandPath } | Select-Object -ExpandProperty BaseName) Help Sections:`n" -f cyan; for ($i = 0; $i -lt $sections.Count; $i++) {Write-Host "$($i + 1). " -f cyan -n; Write-Host $sections[$i].Groups[1].Value -f white}
 if ($selection) {scripthelp $sections[$selection - 1].Groups[1].Value}
-$input = Read-Host "`nEnter a section number to view"
+Write-Host -f yellow "`nEnter a section number to view " -n; $input = Read-Host
 if ($input -match '^\d+$') {$index = [int]$input
 if ($index -ge 1 -and $index -le $sections.Count) {$selection = $index}
 else {$selection = $null}} else {""; return}}
 while ($true); return}
+
+# External call to help.
+if ($help) {help; return}
 
 # Error-checking.
 if ($sourcepath -and -not $zip) {$zip = $sourcepath; $sourcepath = "."}
@@ -91,7 +95,6 @@ Export-ModuleMember -Function updatezip
 
 <#
 ## UpdateZIP
-
 	Usage: updatezip <sourcepath> <zipfilename> <-remove> <-help>
 
 This function simply updates a ZIP file with any files that have changed since it was last updated.
