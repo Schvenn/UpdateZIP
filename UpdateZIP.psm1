@@ -92,6 +92,7 @@ else {Write-Host -f Green "🚫 Nothing to update. All $skipped files matched th
 sal -name update -value updatezip
 
 Export-ModuleMember -Function updatezip
+Export-ModuleMember -Alias update
 
 <#
 ## UpdateZIP
