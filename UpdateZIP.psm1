@@ -59,7 +59,7 @@ while ($true); return}
 if ($help) {help; return}
 
 # Error-checking.
-if ($sourcepath -and -not $zip) {$zip = $sourcepath; $sourcepath = "."}
+if ($sourcepath -and -not $zip) {$zip = $sourcepath; $sourcepath = $PWD.Path}
 if (-not $zip.ToLower().EndsWith('.zip')) {$zip += '.zip'}
 if (-not $sourcepath -or -not (Test-Path $sourcepath)) {$sourcepath = $PWD.Path; Write-Host -f Yellow "`n⚠️ Defaulting to current directory.`n"}
 if (-not ([System.IO.Path]::IsPathRooted($zip))) {$zip = Join-Path -Path (Get-Location) -ChildPath $zip}
